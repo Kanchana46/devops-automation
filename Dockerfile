@@ -1,10 +1,22 @@
-FROM openjdk:17
-EXPOSE 9090
-ADD target/devops.jar devops.jar
-RUN curl -fsSLO https://get.docker.com/builds/Linux/x86_64/docker-17.04.0-ce.tgz \
-  && tar xzvf docker-17.04.0-ce.tgz \
-  && mv docker/docker /usr/local/bin \
-  && rm -r docker docker-17.04.0-ce.tgz
-ENTRYPOINT ["java", "-jar", "devops.jar"]
+# FROM openjdk:17
+# EXPOSE 9090
+# ADD target/devops.jar devops.jar
+# ENTRYPOINT ["java", "-jar", "devops.jar"]
 
+
+# Build stage
+FROM maven:3.9.1-openjdk-17 as build
+WORKDIR /app
+COPY pom.xml .
+RUN mvn dependency:go-offline
+COPY src/ /app/src/
+RUN mvn package -DskipTests
+
+# Final stage
+FROM openjdk:17
+RUN apt-get update && \
+    apt-get install -y docker.io
+EXPOSE 9090
+COPY --from=build /app/target/devops.jar devops.jar
+ENTRYPOINT ["java", "-jar", "devops.jar"]
 
