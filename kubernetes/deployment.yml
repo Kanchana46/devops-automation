@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+  labels:
+    app: my-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+        - name: my-app
+          image: dockerkr12/spring-devops:latest
+          ports:
+            - containerPort: 9090
+      imagePullSecrets:
+        - name: dockerhub-creds
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: spring-devops
+spec:
+  selector:
+    app: spring-devops
+  ports:
+    - name: http
+      port: 80
+      targetPort: 9090
+  type: NodePort
